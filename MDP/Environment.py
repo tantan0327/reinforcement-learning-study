@@ -107,9 +107,7 @@ class Environment():
         next_state = self._execute_action(state, action)
 
         # check whether a state is out of the grid.
-        if not (0 <= next_state.row < self.row_length):
-            next_state = state
-        if not (0 <= next_state.column < self.column_length):
+        if self._is_state_outside_grid(next_state):
             next_state = state
 
         # check whether the agent bumbed a block cell
@@ -118,6 +116,13 @@ class Environment():
 
         return next_state
  
+    def _is_state_outside_grid(self, next_state):
+        if not (0 <= next_state.row < self.row_length):
+            return True
+        if not (0 <= next_state.column < self.column_length):
+            return True
+        
+        return False
 
     def _execute_action(self, state, action):
         next_state = state.clone()
@@ -132,7 +137,7 @@ class Environment():
         elif action == Action.RIGHT:
             next_state.column += 1 
 
-        return next_state     
+        return next_state    
 
     def reward_func(self, state):
         reward = self.default_reward
