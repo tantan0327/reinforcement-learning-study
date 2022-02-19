@@ -1,5 +1,5 @@
+import numpy as np
 from enum import Enum
-
 
 class State():
 
@@ -107,8 +107,9 @@ class Environment():
         next_state = self._execute_action(state, action)
 
         # check whether a state is out of the grid.
-        if not (0 <= next_state.row < self.row_length
-                or 0 <= next_state.column < self.column_length):
+        if not (0 <= next_state.row < self.row_length):
+            next_state = state
+        if not (0 <= next_state.column < self.column_length):
             next_state = state
 
         # check whether the agent bumbed a block cell
@@ -149,6 +150,35 @@ class Environment():
             done = True
 
         return reward, done
+
+    def reset(self):
+        # locate the agent at lower left corner
+        self.agent_state = State(self.row_length - 1, 0)
+        return self.agent_state
+
+    def step(self, action):
+        next_state, reward, done = self.transit(self.agent_state, action)
+        if next_state is not None:
+            self.agent_state = next_state
+
+        return next_state, reward, done
+
+    def transit(self, state, action):
+        transition_probs = self.transit_func(state, action)
+        if len(transition_probs) == 0:
+            return None, None, True
+
+        next_states = []
+        probs = []
+        for s in transition_probs:
+            next_states.append(s)
+            probs.append(transition_probs[s])
+
+        next_state = np.random.choice(next_states, p = probs)
+        reward, done = self.reward_func(next_state)
+        return next_state, reward, done
+
+
 
 
 
