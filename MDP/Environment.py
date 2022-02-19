@@ -68,7 +68,87 @@ class Environment():
 
         return states
 
+    def transit_func(self, state, action):
+        # {(next state cell): (transition probability)}
+        transition_probs = {}
+        if not self.can_action_at(state):
+            # alrady on the terminal cell
+            return transition_probs
 
+        # opposite direction against selected action
+        opposite_direction = Action(action.value *  -1)
+
+        for a in self.actions:
+            prob = 0
+            if a == action:
+                prob = self.move_prob
+            elif a != opposite_direction:
+                prob = (1 - self.move_prob) / 2
+
+            next_state = self._move(state, a)
+            if next_state not in transition_probs:
+                transition_probs[next_state] = prob
+            else:
+                transition_probs[next_state] += prob
+
+        return transition_probs
+
+
+    def can_action_at(self, state):
+        if self.grid[state.row][state.column] == 0:
+            return True
+        else:
+            return False
+
+    def _move(self, state, action):
+        if not self.can_action_at(state):
+            raise Exception("Can't move from here!")
+
+        next_state = self._execute_action(state, action)
+
+        # check whether a state is out of the grid.
+        if not (0 <= next_state.row < self.row_length
+                or 0 <= next_state.column < self.column_length):
+            next_state = state
+
+        # check whether the agent bumbed a block cell
+        if self.grid[next_state.row][next_state.column] == 9:
+            next_state = state
+
+        return next_state
+ 
+
+    def _execute_action(self, state, action):
+        next_state = state.clone()
+
+        # execute an action
+        if action == Action.UP:
+            next_state.row -= 1
+        elif action == Action.DOWN:
+            next_state.row +=1
+        elif action == Action.LEFT:
+            next_state.column -= 1
+        elif action == Action.RIGHT:
+            next_state.column += 1 
+
+        return next_state     
+
+    def reward_func(self, state):
+        reward = self.default_reward
+        done = False
+
+        # check the attribute of next state
+        attribute = self.grid[state.row][state.column]
+        if attribute == 1:
+            # get reward and game ends
+            reward = 1
+            done = True
+        elif attribute == -1:
+            # go damage, and the game ends
+            reward = -1
+            done = True
+
+        return reward, done
 
 
 
