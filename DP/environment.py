@@ -58,7 +58,7 @@ class Environment():
         return [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT]
 
     @property
-    def state(self):
+    def states(self):
         states = []
         for row in range(self.row_length):
             for column in range(self.column_length):
