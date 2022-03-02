@@ -61,3 +61,47 @@ class ValueIterationPlanner(Planner):
         
         V_grid = self.dict_to_grid(V)
         return V_grid
+
+class PolicyIterationPlanner(Planner):
+
+    def __init__(self, env):
+        super().__init__(env)
+        self.policy = {}
+
+    def initialize(self):
+        super().initialize()
+        self.policy = {}
+        actions = self.env.actions
+        states = self.env.states
+        for s in states:
+            self.policy[s] = {}
+            for a in actions:
+                # initialize policy
+                # at first, each action is taken uniformly
+                self.policy[s][a] = 1 / len(actions)
+
+    def estimate_by_policy(self, gamma, threshold):
+        V = {}
+        for s in self.env.states:
+            # initialize each state's expected reward
+            V[s] = 0
+
+        while True:
+            delta = 0
+            for s in V:
+                expected_rewards = []
+                for a in self.policy[s]:
+                    action_prob = self.policy[s][a]
+                    r = 0
+                    for prob, next_state, reward in self.transitions_at(s, a):
+                        # multiply action_prob
+                        r += action_prob * prob * (reward + gamma * V[next_state])
+                    expected_rewards.append(r)
+                max_reward = max(expected_rewards)
+                delta = max(delta, abs(max_reward - V[s]))
+                V[s] = max_reward
+            if delta < threshold:
+                break
+        
+        return V
+        
