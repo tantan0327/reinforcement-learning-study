@@ -2,8 +2,7 @@ import os
 import tornado.web
 import tornado.escape
 from environment import Environment
-#from planner import ValueIterationPlanner, PolicyIterationPlanner
-from planner import ValueIterationPlanner
+from planner import ValueIterationPlanner, PolicyIterationPlanner
 
 
 
@@ -29,8 +28,8 @@ class PlanningHandler(tornado.web.RequestHandler):
         env = Environment(grid, move_prob=move_prob)
         if plan_type == "value":
             planner = ValueIterationPlanner(env)
-        # elif plan_type == "policy":
-        #     planner = PolicyIterationPlanner(env)
+        elif plan_type == "policy":
+            planner = PolicyIterationPlanner(env)
 
         result = planner.plan()
         planner.log.append(result)

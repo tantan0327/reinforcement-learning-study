@@ -104,4 +104,45 @@ class PolicyIterationPlanner(Planner):
                 break
         
         return V
+
+    def plan(self, gamma = 0.9, threshold =0.0001):
+        self.initialize()
+        states = self.env.states
+        actions = self.env.actions
+
+        def take_max_action(action_value_dict):
+            return max(action_value_dict, key = action_value_dict.get)
+
+        while True:
+            update_stable = True
+            # estimate expected rewards under current policy
+            V = self.estimate_by_policy(gamma, threshold)
+            self.log.append(self.dict_to_grid(V))
+
+            for s in states:
+                # get an action following to the current policy
+                policy_action = take_max_action(self.policy[s])
+
+                # compare with other actions
+                action_rewards = {}
+                for a in actions:
+                    r = 0
+                    for prob, next_state, reward in self.transitions_at(s, a):
+                        r += prob * (reward + gamma + V[next_state])
+                    action_rewards[a] = r
+                best_action = take_max_action(action_rewards)
+                if policy_action != best_action:
+                    update_stable = False
+                
+                # update policy (set best_action prob=1, otherwise=0 (greedy))
+                for a in self.policy[s]:
+                    prob = 1 if a == best_action else 0
+                    self.policy[s][a] = prob
+
+            if update_stable:
+                # if policy isn't updated, stop iteration
+                break
+
+        V_grid = self.dict_to_grid(V)
+        return V_grid
         
